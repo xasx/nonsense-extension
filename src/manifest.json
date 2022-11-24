@@ -1,0 +1,41 @@
+{
+    "manifest_version": 3,
+    "name": "YouTube Dark Test Ext",
+    "version": "0.0.0.1",
+    "description": "__MSG_appDescription__",
+    "background": {
+        "service_worker": "background.js"
+    },
+    "default_locale": "en",
+    "permissions": [
+        "bookmarks",
+        "storage",
+        "tabs",
+        "contextMenus"
+    ],
+    "host_permissions": [
+        "https://api.github.com/*"
+    ],
+    "content_scripts": [
+        {
+            "js": [
+                "content.js",
+                "messaging.js",
+                "requests.js"
+            ],
+            "matches": [
+                "https://*.youtube.com/*"
+            ],
+            "run_at": "document_end"
+        }
+    ],
+    "icons": {
+        "16": "icon.png",
+        "48": "icon.png",
+        "128": "icon.png"
+    },
+    "action": {
+        "default_title": "Dark mode YT",
+        "default_popup": "popup.html"
+    }
+}

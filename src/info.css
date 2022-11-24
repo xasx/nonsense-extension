@@ -1,0 +1,47 @@
+h1 {
+    font-family: "Cascadia Code";
+    text-align: end;
+    font-size: 6em;
+
+    
+    margin-top: 1em;
+    margin-left: 1em;
+    margin-right: 1em;
+
+    font-weight: bold;
+}
+
+h2 {
+    font-family: "Cascadia Code";
+    font-size: 3em;
+    font-style: italic;
+
+    text-align: end;
+    margin-bottom: 1em;
+    margin-right: 1em;
+    margin-left: 1em;
+}
+
+div {
+    font-family: sans-serif;
+    font-size: 1.5em;
+    font-weight: normal;
+    text-align: justify;
+    width: 50%;
+    margin-left: 30%;
+    margin-right: auto;
+}
+
+button {
+    font-size: 1.5em;
+    padding: 3px;
+
+    border-radius: 5px;
+    border-width: 1px;
+    border-style: solid;
+    
+
+    background-color: cornflowerblue;
+    color: aliceblue;
+    border-color: darkblue;
+}
