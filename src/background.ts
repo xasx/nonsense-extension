@@ -10,9 +10,12 @@ chrome.runtime.onMessage.addListener((message, sender, response) => {
     console.log("onMessage", message, sender, response);
 
     if (message.msg === "zoomit") {
+        const tabId = sender.tab.id;
+        chrome.action.setBadgeText({ text: "z75", tabId });
+        chrome.action.setBadgeBackgroundColor({ color: "red", tabId });
 
-
-        chrome.tabs.setZoom(sender.tab.id, .75, () => {
+        
+        chrome.tabs.setZoom(tabId, .75, () => {
             console.log("zoomed tab");
 
         });
@@ -54,6 +57,7 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
         chrome.tabs.setZoom(tab.id, 0, () => {
             console.log("reset zoom", info, tab);
             chrome.contextMenus.remove("zoomReset");
+            chrome.action.setBadgeText({text: "", tabId: tab.id });
         });
     }
 
