@@ -24,7 +24,7 @@
                 "requests.js"
             ],
             "matches": [
-                "https://*.youtube.com/*"
+                "*://*/*"
             ],
             "run_at": "document_end"
         }
@@ -37,5 +37,6 @@
     "action": {
         "default_title": "Dark mode YT",
         "default_popup": "popup.html"
-    }
+    },
+    "options_page": "options.html"
 }

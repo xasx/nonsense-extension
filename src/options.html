@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <link rel="stylesheet" href="options.css"/>
+    </head>
+    <body>
+        <div>
+            <input name="mode" type="radio" value="auto" id="mauto"/>
+            <label for="mauto">automatic</label><br/>
+            <div class="desc">here you can fully rely on the extension to do its work</div>
+            
+            <input name="mode" type="radio" value="semi" id="msemi" />
+            <label for="msemi">semi-automatic</label><br/>
+            <div class="desc">if you want to influence what's done</div>
+
+            <input name="mode" type="radio" value="manual" id="mmanual" />
+            <label for="mmanual">manual</label><br/>
+            <div class="desc">allow for doing all by yourself</div>
+
+            <input name="mode" type="radio" value="none" id="mnone" />
+            <label for="mnone">none</label><br/>
+            <div class="desc">don't do anything at all</div>
+        </div>
+        <button id="save" type="button">Save</button>
+        <div id="status"></div>
+        <script type="text/javascript" src="options.js"></script>
+    </body>
+</html>
