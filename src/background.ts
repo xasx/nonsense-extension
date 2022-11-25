@@ -1,5 +1,8 @@
 chrome.runtime.onInstalled.addListener((details) => {
     console.log("installed", details);
+    chrome.runtime.openOptionsPage(() => {
+        console.log("opened options page");
+    });
 })
 
 chrome.bookmarks.onCreated.addListener((_, bm) => {
@@ -10,11 +13,16 @@ chrome.runtime.onMessage.addListener((message, sender, response) => {
     console.log("onMessage", message, sender, response);
 
     if (message.msg === "zoomit") {
-        const tabId = sender.tab.id;
-        chrome.action.setBadgeText({ text: "z75", tabId });
-        chrome.action.setBadgeBackgroundColor({ color: "red", tabId });
+        var tabId: number;
+        if (sender.tab !== undefined) {
+            tabId = sender.tab.id;
+        } else {
+            getCurrentTab().then((tab) => { tabId = tab.id; });
+        }
+        chrome.action.setBadgeText({ text: "75", tabId });
+        chrome.action.setBadgeBackgroundColor({ color: "cornflowerblue", tabId });
 
-        
+
         chrome.tabs.setZoom(tabId, .75, () => {
             console.log("zoomed tab");
 
@@ -28,27 +36,32 @@ chrome.runtime.onMessage.addListener((message, sender, response) => {
             title: "Reset zoom",
             checked: false,
             type: "normal",
-            
+            contexts: ["all"]
+
         }, () => {
             console.log("context menu created");
-            
+
         });
 
     }
 });
 
-chrome.contextMenus.create({
-    id: "topMenu",
-    title: "AS special functions",
-    checked: false,
-    type: "normal",
-});
-chrome.contextMenus.create({
-    id: "info",
-    title: "Info",
-    checked: false,
-    type: "checkbox",
-    parentId: "topMenu"
+chrome.contextMenus.removeAll(() => {
+    console.log("context menus removed");
+
+    chrome.contextMenus.create({
+        id: "topMenu",
+        title: "AS special functions",
+        checked: false,
+        type: "normal",
+    });
+    chrome.contextMenus.create({
+        id: "info",
+        title: "Info",
+        checked: true,
+        type: "checkbox",
+        parentId: "topMenu"
+    });
 });
 
 chrome.contextMenus.onClicked.addListener((info, tab) => {
@@ -57,7 +70,7 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
         chrome.tabs.setZoom(tab.id, 0, () => {
             console.log("reset zoom", info, tab);
             chrome.contextMenus.remove("zoomReset");
-            chrome.action.setBadgeText({text: "", tabId: tab.id });
+            chrome.action.setBadgeText({ text: "", tabId: tab.id });
         });
     }
 
