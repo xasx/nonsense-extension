@@ -1,7 +1,11 @@
 chrome.runtime.onInstalled.addListener((details) => {
     console.log("installed", details);
-    chrome.runtime.openOptionsPage(() => {
-        console.log("opened options page");
+    chrome.storage.local.get(["showOptions"], (data) => {
+        if (data.showOptions) {
+            chrome.runtime.openOptionsPage(() => {
+                console.log("opened options page");
+            });
+        }
     });
 })
 
@@ -19,31 +23,33 @@ chrome.runtime.onMessage.addListener((message, sender, response) => {
         } else {
             getCurrentTab().then((tab) => { tabId = tab.id; });
         }
-        chrome.action.setBadgeText({ text: "75", tabId });
-        chrome.action.setBadgeBackgroundColor({ color: "cornflowerblue", tabId });
+
+        var zoomfactor: number;
+
+        chrome.storage.local.get(["zoomfactor"]).then((value) => {
+            console.log("zoom factor", value);
+            zoomfactor = value.zoomfactor;
+
+            if (zoomfactor === undefined) {
+                zoomfactor = 0;
+            }
+            if (zoomfactor >= 0) {
+                const bt = zoomfactor > 0 ? zoomfactor.toString() : "•••";
+                setBadgeText(bt, tabId);
 
 
-        chrome.tabs.setZoom(tabId, .75, () => {
-            console.log("zoomed tab");
+                chrome.tabs.setZoom(tabId, zoomfactor / 100, () => {
+                    console.log("zoomed tab");
 
+                });
+
+                addResetMenuItem();
+                //chrome.tabs.sendMessage(tab.id, { msg: "zoomed" });
+                response({ msg: "zoomed", factor: zoomfactor });
+            }
         });
-
-        //chrome.tabs.sendMessage(tab.id, { msg: "zoomed" });
-        response({ msg: "zoomed" }); // doesn't work in zoom cb
-
-        chrome.contextMenus.create({
-            id: "zoomReset",
-            title: "Reset zoom",
-            checked: false,
-            type: "normal",
-            contexts: ["all"]
-
-        }, () => {
-            console.log("context menu created");
-
-        });
-
     }
+    return true;
 });
 
 chrome.contextMenus.removeAll(() => {
@@ -94,6 +100,24 @@ chrome.tabs.onActivated.addListener((tai) => {
 chrome.action.onClicked.addListener((tab) => {
     console.log("clicked", tab);
 });
+
+function addResetMenuItem() {
+    chrome.contextMenus.create({
+        id: "zoomReset",
+        title: "Reset zoom",
+        checked: false,
+        type: "normal",
+        contexts: ["all"]
+    }, () => {
+        console.log("context menu created");
+
+    });
+}
+
+function setBadgeText(bt: string, tabId: number) {
+    chrome.action.setBadgeText({ text: bt, tabId });
+    chrome.action.setBadgeBackgroundColor({ color: "cornflowerblue", tabId });
+}
 
 async function getCurrentTab() {
     let queryOptions = { active: true, lastFocusedWindow: true };
