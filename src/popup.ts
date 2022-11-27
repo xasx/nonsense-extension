@@ -4,3 +4,6 @@ function zoomIt() {
 }
 
 document.getElementById("zbtn").addEventListener("click", zoomIt);
+chrome.storage.local.get("mode").then(function (mode) {
+    document.getElementById("container").innerText = "Mode: " + mode.mode;
+});
