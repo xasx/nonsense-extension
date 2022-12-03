@@ -1,20 +1,21 @@
 function saveSettings() {
     const mode = document.querySelector('input[name="mode"]:checked') as HTMLInputElement;
     if (mode === null) {
+            setStatus("No mode selected. Please select one.");
             return;
         }
 
     const zoomfactor = document.getElementById("zoomfactor") as HTMLInputElement;
 
     if (zoomfactor === null || !isFinite(Number(zoomfactor.value))) {
-        setStatus("Invalid Zoom factor value");
+        setStatus("Invalid Zoom factor value. Must be a positive number.");
         return;
     }
 
     const delay = document.getElementById("delay") as HTMLInputElement;
 
     if (delay === null || !isFinite(Number(delay.value))) {
-        setStatus("Invalid value for Delay");
+        setStatus("Invalid value for Delay. Must be a positive number.");
         return;
     }
 
@@ -23,12 +24,12 @@ function saveSettings() {
     const blacklist = document.getElementById("blacklist") as HTMLTextAreaElement;
     const blacklistItems = blacklist.value.split("\n").sort().filter(bli => bli.length > 0);
 
-    console.log("black list", blacklistItems);
+    console.debug("Blacklist", blacklistItems);
     blacklist.value = blacklistItems.join("\n");
 
     let settings = { mode: mode.value, zoomfactor: zoomfactor.value, delay: delay.value, showOptions: showOptions.checked, blacklistItems };
     chrome.storage.local.set(settings, function() {
-        console.log('Settings saved');
+        console.debug('Settings saved');
         setStatus("Settings saved.");
     });
 }
