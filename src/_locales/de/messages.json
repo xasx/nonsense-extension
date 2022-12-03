@@ -1,5 +1,8 @@
 {
     "appDescription": {
         "message": "Ein paar Tools für mehr Zugänglichkeit"
+    },
+    "scrollToTop": {
+        "message": "Zum Anfang scrollen"
     }
 }
