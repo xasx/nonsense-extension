@@ -1,20 +1,20 @@
 chrome.runtime.onInstalled.addListener((details) => {
-    console.log("installed", details);
+    console.debug("installed", details);
     chrome.storage.local.get(["showOptions"], (data) => {
         if (data.showOptions) {
             chrome.runtime.openOptionsPage(() => {
-                console.log("opened options page");
+                console.debug("opened options page");
             });
         }
     });
 })
 
 chrome.bookmarks.onCreated.addListener((_, bm) => {
-    console.log("New bookmark", bm);
+    console.debug("New bookmark", bm);
 })
 
 chrome.runtime.onMessage.addListener((message, sender, response) => {
-    console.log("onMessage", message, sender, response);
+    console.debug("onMessage", message, sender, response);
 
     if (message.msg === "zoomit") {
         var tabId: number;
@@ -27,7 +27,7 @@ chrome.runtime.onMessage.addListener((message, sender, response) => {
         var zoomfactor: number;
 
         chrome.storage.local.get(["zoomfactor"]).then((value) => {
-            console.log("zoom factor", value);
+            console.debug("zoom factor loaded", value);
             zoomfactor = value.zoomfactor;
 
             if (zoomfactor === undefined) {
@@ -39,12 +39,12 @@ chrome.runtime.onMessage.addListener((message, sender, response) => {
 
 
                 chrome.tabs.setZoom(tabId, zoomfactor / 100, () => {
-                    console.log("zoomed tab");
+                    console.debug("zoomed tab", tabId, zoomfactor);
 
                 });
 
                 addResetMenuItem();
-                //chrome.tabs.sendMessage(tab.id, { msg: "zoomed" });
+                
                 response({ msg: "zoomed", factor: zoomfactor });
             }
         });
@@ -52,65 +52,37 @@ chrome.runtime.onMessage.addListener((message, sender, response) => {
     return true;
 });
 
-chrome.contextMenus.removeAll(() => {
-    console.log("context menus removed");
-
-    chrome.contextMenus.create({
-        id: "topMenu",
-        title: "AS special functions",
-        checked: false,
-        type: "normal",
-    });
-    chrome.contextMenus.create({
-        id: "info",
-        title: "Info",
-        checked: true,
-        type: "checkbox",
-        parentId: "topMenu"
-    });
-});
-
 chrome.contextMenus.onClicked.addListener((info, tab) => {
     if (info.menuItemId === "zoomReset") {
 
         chrome.tabs.setZoom(tab.id, 0, () => {
-            console.log("reset zoom", info, tab);
+            console.debug("reset zoom", info, tab);
             chrome.contextMenus.remove("zoomReset");
             chrome.action.setBadgeText({ text: "", tabId: tab.id });
         });
+        return true;
     }
 
-    if (info.menuItemId === "info") {
-        chrome.tabs.sendMessage(tab.id, { msg: "info" }, (response) => {
-            console.log(response);
-        });
-        chrome.tabs.create({
-            url: chrome.runtime.getURL("info.html"),
-            active: true,
-        });
-    }
 });
 
 chrome.tabs.onActivated.addListener((tai) => {
-    console.log("tab activated", tai);
-
-
+    console.debug("tab activated", tai);
+    chrome.tabs.sendMessage(tai.tabId, { msg: "checkScrollButton"})
+                    .catch((reason) => { console.error("error sending message", reason); });
 });
 
 chrome.action.onClicked.addListener((tab) => {
-    console.log("clicked", tab);
+    console.debug("clicked", tab);
 });
 
 function addResetMenuItem() {
     chrome.contextMenus.create({
         id: "zoomReset",
         title: "Reset zoom",
-        checked: false,
         type: "normal",
         contexts: ["all"]
     }, () => {
-        console.log("context menu created");
-
+        console.debug("context menu item reset zoom created");
     });
 }
 
@@ -121,7 +93,6 @@ function setBadgeText(bt: string, tabId: number) {
 
 async function getCurrentTab() {
     let queryOptions = { active: true, lastFocusedWindow: true };
-    // `tab` will either be a `tabs.Tab` instance or `undefined`.
     let [tab] = await chrome.tabs.query(queryOptions);
     return tab;
 }
