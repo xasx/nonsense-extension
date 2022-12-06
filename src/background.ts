@@ -44,7 +44,7 @@ chrome.runtime.onMessage.addListener((message, sender, response) => {
                 });
 
                 addResetMenuItem();
-                
+
                 response({ msg: "zoomed", factor: zoomfactor });
             }
         });
@@ -67,8 +67,23 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
 
 chrome.tabs.onActivated.addListener((tai) => {
     console.debug("tab activated", tai);
-    chrome.tabs.sendMessage(tai.tabId, { msg: "checkScrollButton"})
+    chrome.tabs.get(tai.tabId, (tab) => {
+
+        chrome.storage.local.get(["blacklistItems"], (data) => {
+            var blacklisted = false;
+
+            for (let item of data.blacklistItems) {
+                if (tab.url.includes(item)) {
+                    blacklisted = true;
+                    break;
+                }
+            }
+            if (!blacklisted) {
+                chrome.tabs.sendMessage(tai.tabId, { msg: "checkScrollButton" })
                     .catch((reason) => { console.error("error sending message", reason); });
+            }
+        });
+    });
 });
 
 chrome.action.onClicked.addListener((tab) => {
