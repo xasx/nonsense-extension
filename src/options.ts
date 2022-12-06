@@ -1,9 +1,9 @@
 function saveSettings() {
     const mode = document.querySelector('input[name="mode"]:checked') as HTMLInputElement;
     if (mode === null) {
-            setStatus("No mode selected. Please select one.");
-            return;
-        }
+        setStatus("No mode selected. Please select one.");
+        return;
+    }
 
     const zoomfactor = document.getElementById("zoomfactor") as HTMLInputElement;
 
@@ -28,7 +28,7 @@ function saveSettings() {
     blacklist.value = blacklistItems.join("\n");
 
     let settings = { mode: mode.value, zoomfactor: zoomfactor.value, delay: delay.value, showOptions: showOptions.checked, blacklistItems };
-    chrome.storage.local.set(settings, function() {
+    chrome.storage.local.set(settings).then(function () {
         console.debug('Settings saved');
         setStatus("Settings saved.");
     });
@@ -40,26 +40,27 @@ function setStatus(statusText: string) {
     status.textContent = statusText;
 }
 
-function loadSettings() {   
-    chrome.storage.local.get(['mode', "zoomfactor", "delay", "showOptions", "blacklistItems"], function(data) {
-        
-        const mode = document.getElementById("m" + data.mode) as HTMLInputElement;
-        mode.checked = true;
+function loadSettings() {
+    chrome.storage.local.get(['mode', "zoomfactor", "delay", "showOptions", "blacklistItems"])
+        .then(function (data) {
 
-        const zoomfactor = document.getElementById("zoomfactor") as HTMLInputElement;
-        zoomfactor.value = data.zoomfactor;
+            const mode = document.getElementById("m" + data.mode) as HTMLInputElement;
+            mode.checked = true;
 
-        const delay = document.getElementById("delay") as HTMLInputElement;
-        delay.value = data.delay;
+            const zoomfactor = document.getElementById("zoomfactor") as HTMLInputElement;
+            zoomfactor.value = data.zoomfactor;
 
-        const showOptions = document.getElementById("showOptions") as HTMLInputElement;
-        showOptions.checked = data.showOptions;
+            const delay = document.getElementById("delay") as HTMLInputElement;
+            delay.value = data.delay;
 
-        const blacklist = document.getElementById("blacklist") as HTMLTextAreaElement;
-        blacklist.value = data.blacklistItems.join("\n");
+            const showOptions = document.getElementById("showOptions") as HTMLInputElement;
+            showOptions.checked = data.showOptions;
 
-        document.getElementById("status").textContent = "Settings loaded.";
-    });
+            const blacklist = document.getElementById("blacklist") as HTMLTextAreaElement;
+            blacklist.value = data.blacklistItems.join("\n");
+
+            document.getElementById("status").textContent = "Settings loaded.";
+        });
 }
 
 document.getElementById("save").addEventListener("click", saveSettings);

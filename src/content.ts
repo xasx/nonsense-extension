@@ -1,22 +1,23 @@
 window.addEventListener("load", () => {
-    chrome.storage.local.get(["blacklistItems"], (data) => {
-        var show = true;
-        const host = window.location.hostname;
-        
-        for (const item of data.blacklistItems) {
-            if (host.includes(item)) {
-                console.debug("Hostname blacklisted", host, item);
-                show = false;
-                break;
+    chrome.storage.local.get(["blacklistItems"])
+        .then((data) => {
+            var show = true;
+            const host = window.location.hostname;
+
+            for (const item of data.blacklistItems) {
+                if (host.includes(item)) {
+                    console.debug("Hostname blacklisted", host, item);
+                    show = false;
+                    break;
+                }
             }
-        }
-        if (show) {
-            window.addEventListener("scroll", (e) => {
+            if (show) {
+                window.addEventListener("scroll", (e) => {
+                    conditionalScrollButton();
+                });
                 conditionalScrollButton();
-            });
-            conditionalScrollButton();
-        }
-    });
+            }
+        });
 });
 
 function conditionalScrollButton() {
@@ -57,12 +58,12 @@ function addScrollButton() {
     button.style.borderColor = "grey";
 
     button.title = chrome.i18n.getMessage("scrollToTop");
-    
+
     const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg") as SVGElement;
     svg.setAttribute("fill", "grey");
     svg.setAttribute("stroke", "grey");
     svg.setAttribute("viewBox", "0 0 1000 1000");
-    svg.setAttribute("width", "50%"); 
+    svg.setAttribute("width", "50%");
     svg.setAttribute("height", "50%");
     svg.id = "upArrowSvg";
 

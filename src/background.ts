@@ -1,17 +1,17 @@
 chrome.runtime.onInstalled.addListener((details) => {
     console.debug("installed", details);
-    chrome.storage.local.get(["showOptions"], (data) => {
+    chrome.storage.local.get(["showOptions"]).then((data) => {
         if (data.showOptions) {
             chrome.runtime.openOptionsPage(() => {
                 console.debug("opened options page");
             });
         }
     });
-})
+});
 
 chrome.bookmarks.onCreated.addListener((_, bm) => {
     console.debug("New bookmark", bm);
-})
+});
 
 chrome.runtime.onMessage.addListener((message, sender, response) => {
     console.debug("onMessage", message, sender, response);
@@ -55,11 +55,12 @@ chrome.runtime.onMessage.addListener((message, sender, response) => {
 chrome.contextMenus.onClicked.addListener((info, tab) => {
     if (info.menuItemId === "zoomReset") {
 
-        chrome.tabs.setZoom(tab.id, 0, () => {
-            console.debug("reset zoom", info, tab);
-            chrome.contextMenus.remove("zoomReset");
-            chrome.action.setBadgeText({ text: "", tabId: tab.id });
-        });
+        chrome.tabs.setZoom(tab.id, 0)
+            .then(() => {
+                console.debug("reset zoom", info, tab);
+                chrome.contextMenus.remove("zoomReset");
+                chrome.action.setBadgeText({ text: "", tabId: tab.id });
+            });
         return true;
     }
 
@@ -67,23 +68,25 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
 
 chrome.tabs.onActivated.addListener((tai) => {
     console.debug("tab activated", tai);
-    chrome.tabs.get(tai.tabId, (tab) => {
+    chrome.tabs.get(tai.tabId)
+        .then((tab) => {
 
-        chrome.storage.local.get(["blacklistItems"], (data) => {
-            var blacklisted = false;
+            chrome.storage.local.get(["blacklistItems"])
+                .then((data) => {
+                    var blacklisted = false;
 
-            for (let item of data.blacklistItems) {
-                if (tab.url.includes(item)) {
-                    blacklisted = true;
-                    break;
-                }
-            }
-            if (!blacklisted) {
-                chrome.tabs.sendMessage(tai.tabId, { msg: "checkScrollButton" })
-                    .catch((reason) => { console.error("error sending message", reason); });
-            }
+                    for (let item of data.blacklistItems) {
+                        if (tab.url.includes(item)) {
+                            blacklisted = true;
+                            break;
+                        }
+                    }
+                    if (!blacklisted) {
+                        chrome.tabs.sendMessage(tai.tabId, { msg: "checkScrollButton" })
+                            .catch((reason) => { console.error("error sending message", reason); });
+                    }
+                });
         });
-    });
 });
 
 chrome.action.onClicked.addListener((tab) => {
