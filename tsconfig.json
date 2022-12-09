@@ -2,7 +2,11 @@
     "compilerOptions": {
         "outDir": "./dist",
         "allowJs": true,
-        "target": "ES2022"
+        "target": "ES2022",
+        "module": "ES2022",
+        "moduleResolution": "NodeNext",
+        "allowSyntheticDefaultImports": true,
+        "esModuleInterop": true
     },
     "include": [
         "./src/**/*"

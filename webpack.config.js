@@ -3,6 +3,9 @@ const glob = require("glob");
 const CopyPlugin = require("copy-webpack-plugin")
 module.exports = {
     entry: glob.sync("./src/**/*.ts").reduce(function (obj, el) {
+        if (el.includes("common")) {
+            return obj;
+        }
         obj[path.parse(el).name] = el;
         return obj;
     }, {}),
@@ -14,6 +17,9 @@ module.exports = {
         rules: [
             { test: /\.tsx?$/, loader: "ts-loader" }
         ]
+    },
+    resolve: {
+        extensions: [".tsx", ".ts", ".js"]
     },
     plugins: [
         new CopyPlugin({

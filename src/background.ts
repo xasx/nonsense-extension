@@ -1,93 +1,85 @@
-chrome.runtime.onInstalled.addListener((details) => {
+import { isNotBlacklisted } from "./common";
+
+chrome.runtime.onInstalled.addListener(async (details) => {
     console.debug("installed", details);
-    chrome.storage.local.get(["showOptions"]).then((data) => {
-        if (data.showOptions) {
-            chrome.runtime.openOptionsPage(() => {
-                console.debug("opened options page");
-            });
-        }
-    });
+    let data = await chrome.storage.local.get(["showOptions"]);
+    if (data.showOptions) {
+        chrome.runtime.openOptionsPage();
+    }
+
 });
 
 chrome.bookmarks.onCreated.addListener((_, bm) => {
     console.debug("New bookmark", bm);
 });
 
-chrome.runtime.onMessage.addListener((message, sender, response) => {
+chrome.runtime.onMessage.addListener(async (message, sender, response) => {
     console.debug("onMessage", message, sender, response);
 
     if (message.msg === "zoomit") {
-        var tabId: number;
+        let tabId: number;
         if (sender.tab !== undefined) {
             tabId = sender.tab.id;
         } else {
-            getCurrentTab().then((tab) => { tabId = tab.id; });
+            let tab = await getCurrentTab();
+            tabId = tab.id;
         }
 
-        var zoomfactor: number;
+        let zoomfactor: number;
 
-        chrome.storage.local.get(["zoomfactor"]).then((value) => {
-            console.debug("zoom factor loaded", value);
-            zoomfactor = value.zoomfactor;
+        let value = await chrome.storage.local.get(["zoomfactor"]);
 
-            if (zoomfactor === undefined) {
-                zoomfactor = 0;
-            }
-            if (zoomfactor >= 0) {
-                const bt = zoomfactor > 0 ? zoomfactor.toString() : "•••";
-                setBadgeText(bt, tabId);
+        console.debug("zoom factor loaded", value);
+        zoomfactor = value.zoomfactor;
+
+        if (zoomfactor === undefined) {
+            zoomfactor = 0;
+        }
+        if (zoomfactor >= 0) {
+            const bt = zoomfactor > 0 ? zoomfactor.toString() : "•••";
+            await setBadgeText(bt, tabId);
 
 
-                chrome.tabs.setZoom(tabId, zoomfactor / 100, () => {
-                    console.debug("zoomed tab", tabId, zoomfactor);
+            await chrome.tabs.setZoom(tabId, zoomfactor / 100);
 
-                });
+            addResetMenuItem();
 
-                addResetMenuItem();
+            response({ msg: "zoomed", factor: zoomfactor });
+        }
 
-                response({ msg: "zoomed", factor: zoomfactor });
-            }
-        });
     }
     return true;
 });
 
-chrome.contextMenus.onClicked.addListener((info, tab) => {
+chrome.contextMenus.onClicked.addListener(async (info, tab) => {
     if (info.menuItemId === "zoomReset") {
 
-        chrome.tabs.setZoom(tab.id, 0)
-            .then(() => {
-                console.debug("reset zoom", info, tab);
-                chrome.contextMenus.remove("zoomReset");
-                chrome.action.setBadgeText({ text: "", tabId: tab.id });
-            });
+        await chrome.tabs.setZoom(tab.id, 0);
+
+        console.debug("reset zoom", info, tab);
+        chrome.contextMenus.remove("zoomReset");
+        await chrome.action.setBadgeText({ text: "", tabId: tab.id });
+
         return true;
     }
 
 });
 
-chrome.tabs.onActivated.addListener((tai) => {
+chrome.tabs.onActivated.addListener(async (tai) => {
     console.debug("tab activated", tai);
-    chrome.tabs.get(tai.tabId)
-        .then((tab) => {
+    let tab = await chrome.tabs.get(tai.tabId)
 
-            chrome.storage.local.get(["blacklistItems"])
-                .then((data) => {
-                    var blacklisted = false;
+    let url = new URL(tab.url);
+    if (await isNotBlacklisted(url.hostname)) {
+        chrome.tabs.sendMessage(tai.tabId, { msg: "checkScrollButton" })
+            .catch((reason) => { console.error("error sending message", reason); });
+    } else {
+        console.debug("Blacklisted hostname in tab", tab, url);
+    }
 
-                    for (let item of data.blacklistItems) {
-                        if (tab.url.includes(item)) {
-                            blacklisted = true;
-                            break;
-                        }
-                    }
-                    if (!blacklisted) {
-                        chrome.tabs.sendMessage(tai.tabId, { msg: "checkScrollButton" })
-                            .catch((reason) => { console.error("error sending message", reason); });
-                    }
-                });
-        });
 });
+
+
 
 chrome.action.onClicked.addListener((tab) => {
     console.debug("clicked", tab);
@@ -104,9 +96,9 @@ function addResetMenuItem() {
     });
 }
 
-function setBadgeText(bt: string, tabId: number) {
-    chrome.action.setBadgeText({ text: bt, tabId });
-    chrome.action.setBadgeBackgroundColor({ color: "cornflowerblue", tabId });
+async function setBadgeText(bt: string, tabId: number) {
+    await chrome.action.setBadgeText({ text: bt, tabId });
+    await chrome.action.setBadgeBackgroundColor({ color: "cornflowerblue", tabId });
 }
 
 async function getCurrentTab() {
@@ -114,3 +106,5 @@ async function getCurrentTab() {
     let [tab] = await chrome.tabs.query(queryOptions);
     return tab;
 }
+
+

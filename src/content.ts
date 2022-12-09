@@ -1,23 +1,12 @@
-window.addEventListener("load", () => {
-    chrome.storage.local.get(["blacklistItems"])
-        .then((data) => {
-            var show = true;
-            const host = window.location.hostname;
+import { isNotBlacklisted } from "./common";
 
-            for (const item of data.blacklistItems) {
-                if (host.includes(item)) {
-                    console.debug("Hostname blacklisted", host, item);
-                    show = false;
-                    break;
-                }
-            }
-            if (show) {
-                window.addEventListener("scroll", (e) => {
-                    conditionalScrollButton();
-                });
-                conditionalScrollButton();
-            }
+window.addEventListener("load", async () => {
+    if (await isNotBlacklisted(window.location.hostname)) {
+        window.addEventListener("scroll", () => {
+            conditionalScrollButton();
         });
+        conditionalScrollButton();
+    }
 });
 
 function conditionalScrollButton() {
@@ -79,27 +68,30 @@ function addScrollButton() {
         "54.3,35.2,85.2,35.2s61.6-11.7,85.2-35.2c47.1-47.1,47.1-123.3,0-170.4L585.2,61.5z"
     );
 
-    button.addEventListener("click", (event) => {
+    button.addEventListener("click", () => {
         //window.scrollTo(0, 0);
         window.scrollTo({ top: 0, behavior: "smooth" });
     });
 
-    button.addEventListener("mouseover", (event) => {
+    button.addEventListener("mouseover", () => {
         button.style.borderColor = "darkblue";
         button.style.color = "white";
         button.style.backgroundColor = "cornflowerblue";
         svg.setAttribute("fill", "white");
     });
 
-    button.addEventListener("mouseout", (event) => {
+    button.addEventListener("mouseout", () => {
         button.style.borderColor = "grey";
         button.style.color = "grey";
         button.style.backgroundColor = "white";
         svg.setAttribute("fill", "grey");
     });
 
-    button.addEventListener("contextmenu", (event) => {
+    button.addEventListener("contextmenu", async (event) => {
         button.remove();
+        if (event.shiftKey) {
+            await addToBlacklist(window.location.hostname);
+        }
         event.preventDefault();
     });
 
@@ -124,4 +116,13 @@ chrome.runtime.onMessage.addListener((message, sender, cb) => {
     cb();
 
 });
+
+async function addToBlacklist(url: string) {
+    let data = await chrome.storage.local.get(["blacklistItems"]);
+    let bl = data.blacklistItems as Array<string>;
+    bl.push(url);
+    bl.sort();
+    await chrome.storage.local.set({ blacklistItems: bl });
+
+}
 
